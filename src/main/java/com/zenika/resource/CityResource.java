@@ -2,22 +2,27 @@ package com.zenika.resource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.zenika.entity.City;
+import com.zenika.event.ConsultationEvent;
 import com.zenika.service.WeatherService;
 import com.zenika.service.model.DailyWeather7Timer;
 import io.quarkus.cache.CacheResult;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.metrics.annotation.Timed;
 import org.eclipse.microprofile.openapi.annotations.OpenAPIDefinition;
 import org.eclipse.microprofile.openapi.annotations.info.Info;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import org.hibernate.SessionFactory;
 import org.jboss.resteasy.reactive.Cache;
 import org.jboss.resteasy.reactive.RestPath;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -28,9 +33,11 @@ import java.util.Optional;
 public class CityResource {
 
     private final WeatherService weatherService;
+    private final Emitter<ConsultationEvent> consultationEventEmitter;
 
-    public CityResource(WeatherService weatherService) {
+    public CityResource(WeatherService weatherService, @Channel("consultation-event") Emitter<ConsultationEvent> consultationEventEmitter) {
         this.weatherService = weatherService;
+        this.consultationEventEmitter = consultationEventEmitter;
     }
 
     @Timed
@@ -55,8 +62,8 @@ public class CityResource {
     @Timed
     @GET
     @Path("/{name}/weather")
-    @CacheResult(cacheName = "getWeather")
     public List<DailyWeather7Timer.DataSeries> getWeather(@PathParam("name") String name) throws JsonProcessingException {
+        consultationEventEmitter.send(new ConsultationEvent(name, Instant.now()));
         return weatherService.getWeather(name);
     }
 
