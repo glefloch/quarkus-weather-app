@@ -5,6 +5,7 @@ import com.zenika.service.WeatherClient;
 import com.zenika.service.model.DailyWeather7Timer;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ public class CityResourceTest {
 
 
     @Test
+    @TestSecurity(user="test",roles={"admin"})
     public void shouldReturn404OnMissingCity() {
         given()
                 .when().get("/city/test")
@@ -39,6 +41,7 @@ public class CityResourceTest {
 
 
     @Test
+    @TestSecurity(user="test",roles={"admin"})
     public void shouldInsertNewCity() {
 
         given().body(new City("Rennes"))
@@ -58,6 +61,7 @@ public class CityResourceTest {
 
 
     @Test
+    @TestSecurity(user = "test", roles = {"user"})
     public void shouldReturnWeatherForecast() {
 
         Mockito.when(weatherClient.getWeather(Mockito.any(), Mockito.any())).thenReturn("""

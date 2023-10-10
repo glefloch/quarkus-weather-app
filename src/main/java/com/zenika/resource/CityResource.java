@@ -7,6 +7,8 @@ import com.zenika.service.WeatherService;
 import com.zenika.service.model.DailyWeather7Timer;
 import io.quarkus.cache.CacheResult;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import io.quarkus.security.Authenticated;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.transaction.Transactional;
@@ -49,6 +51,7 @@ public class CityResource {
 
     @Timed
     @GET
+    @RolesAllowed("admin")
     @Path("/{name}")
     public Response getByName(@PathParam("name") String name) {
         Optional<PanacheEntityBase> result = City.find("name", name).firstResultOptional();
@@ -62,6 +65,7 @@ public class CityResource {
     @Timed
     @GET
     @Path("/{name}/weather")
+    @Authenticated
     public List<DailyWeather7Timer.DataSeries> getWeather(@PathParam("name") String name) throws JsonProcessingException {
         consultationEventEmitter.send(new ConsultationEvent(name, Instant.now()));
         return weatherService.getWeather(name);
@@ -69,6 +73,7 @@ public class CityResource {
 
     @Timed
     @POST
+    @RolesAllowed("admin")
     @Transactional
     public Response createCity(City city) {
         Optional<PanacheEntityBase> baseCity = City.find("name", city.name).firstResultOptional();
@@ -81,6 +86,7 @@ public class CityResource {
 
     @DELETE
     @Transactional
+    @RolesAllowed("admin")
     @Path("/{name}")
     public void deleteCity(@RestPath String name) {
        City.delete("name", name);
