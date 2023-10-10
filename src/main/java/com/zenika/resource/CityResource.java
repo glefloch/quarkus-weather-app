@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.zenika.entity.City;
 import com.zenika.service.WeatherService;
 import com.zenika.service.model.DailyWeather7Timer;
+import io.quarkus.cache.CacheResult;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -54,7 +55,7 @@ public class CityResource {
     @Timed
     @GET
     @Path("/{name}/weather")
-    @Cache
+    @CacheResult(cacheName = "getWeather")
     public List<DailyWeather7Timer.DataSeries> getWeather(@PathParam("name") String name) throws JsonProcessingException {
         return weatherService.getWeather(name);
     }
